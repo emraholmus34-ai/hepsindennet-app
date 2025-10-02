@@ -1,6 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 
 const EmlakIlanFormu = () => {
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const adMode = params.get('mode') || '';
+  const subType = params.get('sub') || '';
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -40,8 +45,28 @@ const EmlakIlanFormu = () => {
       siteMessage: true,
       sms: false
     },
-    hidePhoneNumber: false
+    hidePhoneNumber: false,
+    adMode,
+    subType
   });
+  // Draft auto-save
+  useEffect(() => {
+    const key = 'draft_konut';
+    const saved = localStorage.getItem(key);
+    if (saved) {
+      try { setFormData(prev => ({ ...prev, ...JSON.parse(saved) })); } catch {}
+    }
+  }, []);
+
+  useEffect(() => {
+    const key = 'draft_konut';
+    localStorage.setItem(key, JSON.stringify(formData));
+  }, [formData]);
+
+  const clearDraft = () => {
+    localStorage.removeItem('draft_konut');
+    alert('Taslak temizlendi');
+  };
 
   const [showMapModal, setShowMapModal] = useState(false);
   const [validationError, setValidationError] = useState('');
@@ -141,6 +166,7 @@ const EmlakIlanFormu = () => {
     }
     
     setValidationError('');
+    localStorage.removeItem('draft_konut');
     alert('İlan başarıyla oluşturuldu!');
   };
 
@@ -1056,10 +1082,26 @@ const EmlakIlanFormu = () => {
             
             <div className="space-y-4">
               <div className="grid grid-cols-3 gap-2">
-                <div 
-                  onClick={() => alert('Fotoğraf yükleme özelliği aktif edildi!')}
-                  className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center hover:border-blue-400 hover:bg-blue-50 transition-colors cursor-pointer"
-                >
+                <label className="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center hover:border-blue-400 hover:bg-blue-50 transition-colors cursor-pointer">
+                  <input type="file" accept="image/*" multiple onChange={(e)=>{
+                    const files = Array.from(e.target.files||[]);
+                    if(files.length===0) return;
+                    const toBlob = (file)=>new Promise(resolve=>{
+                      const img=new Image();
+                      img.onload=()=>{
+                        const MAX=1920; const scale=Math.min(1, MAX/Math.max(img.width,img.height));
+                        const canvas=document.createElement('canvas');
+                        canvas.width=Math.round(img.width*scale); canvas.height=Math.round(img.height*scale);
+                        const ctx=canvas.getContext('2d');
+                        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+                        canvas.toBlob((b)=>resolve(b),'image/jpeg',0.8);
+                      };
+                      img.src=URL.createObjectURL(file);
+                    });
+                    Promise.all(files.map(toBlob)).then(()=>{
+                      alert('Fotoğraflar sıkıştırıldı (örnek).');
+                    });
+                  }} className="hidden" />
                   <div className="flex flex-col items-center">
                     <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mb-1">
                       <span className="text-blue-600 text-sm">📷</span>
@@ -1067,7 +1109,7 @@ const EmlakIlanFormu = () => {
                     <span className="text-xs font-medium text-gray-700">Fotoğraf</span>
                     <span className="text-xs text-gray-500">0/20</span>
                   </div>
-                </div>
+                </label>
 
                 <div 
                   onClick={() => alert('360° fotoğraf yükleme özelliği aktif edildi!')}
@@ -1121,6 +1163,13 @@ const EmlakIlanFormu = () => {
         </div>
 
         <div className="mt-6 sticky bottom-0 bg-gray-100 pt-4">
+          <div className="flex gap-2 mb-2">
+            <button 
+              onClick={clearDraft}
+              className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg text-sm hover:bg-gray-300"
+            >Taslağı Temizle</button>
+            <div className="flex-1 text-right text-xs text-gray-500 self-center">{formData.adMode ? (formData.adMode === 'sale' ? 'Satılık' : 'Kiralık') : ''} {formData.subType ? `• ${formData.subType}` : ''}</div>
+          </div>
           <button 
             onClick={handleSubmit}
             className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-4 rounded-lg font-semibold text-base hover:from-green-600 hover:to-green-700 transition-colors shadow-lg"

@@ -1170,7 +1170,7 @@ const HepsindenNet = () => {
                 </div>
               ) : (
                 getFilteredAndSortedAds().map((ad) => (
-                  <div key={ad.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                  <div key={ad.id} className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/ilan?id=${ad.id}`)}>
                     <div className="flex">
                       <div className="w-28 h-20 bg-gray-100 flex items-center justify-center text-4xl flex-shrink-0">{ad.image}</div>
                       <div className="flex-1 p-3 min-w-0">

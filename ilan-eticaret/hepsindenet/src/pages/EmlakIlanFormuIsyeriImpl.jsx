@@ -1,6 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 
 const EmlakIlanFormu = ({ formType = "isyeri" }) => {
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const adMode = params.get('mode') || '';
+  const subType = params.get('sub') || '';
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -58,8 +63,28 @@ const EmlakIlanFormu = ({ formType = "isyeri" }) => {
     elevatorFeatures: [],
     vehicleHeight: '',
     energyFeatures: [],
-    groundSurvey: ''
+    groundSurvey: '',
+    adMode,
+    subType
   });
+  // Draft auto-save
+  useEffect(() => {
+    const key = 'draft_isyeri';
+    const saved = localStorage.getItem(key);
+    if (saved) {
+      try { setFormData(prev => ({ ...prev, ...JSON.parse(saved) })); } catch {}
+    }
+  }, []);
+
+  useEffect(() => {
+    const key = 'draft_isyeri';
+    localStorage.setItem(key, JSON.stringify(formData));
+  }, [formData]);
+
+  const clearDraft = () => {
+    localStorage.removeItem('draft_isyeri');
+    alert('Taslak temizlendi');
+  };
 
   const [showMapModal, setShowMapModal] = useState(false);
   const [validationError, setValidationError] = useState('');
@@ -178,6 +203,7 @@ const EmlakIlanFormu = ({ formType = "isyeri" }) => {
     }
     
     setValidationError('');
+    localStorage.removeItem('draft_isyeri');
     alert('İlan başarıyla oluşturuldu!');
   };
 
@@ -1316,6 +1342,13 @@ const EmlakIlanFormu = ({ formType = "isyeri" }) => {
         </div>
 
         <div className="mt-6 sticky bottom-0 bg-gray-100 pt-4">
+          <div className="flex gap-2 mb-2">
+            <button 
+              onClick={clearDraft}
+              className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg text-sm hover:bg-gray-300"
+            >Taslağı Temizle</button>
+            <div className="flex-1 text-right text-xs text-gray-500 self-center">{formData.adMode ? (formData.adMode === 'sale' ? 'Satılık' : 'Kiralık') : ''} {formData.subType ? `• ${formData.subType}` : ''}</div>
+          </div>
           <button 
             onClick={handleSubmit}
             className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-4 rounded-lg font-semibold text-base hover:from-green-600 hover:to-green-700 transition-colors shadow-lg"

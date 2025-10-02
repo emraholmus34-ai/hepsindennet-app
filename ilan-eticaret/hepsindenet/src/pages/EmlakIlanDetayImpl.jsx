@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const EmlakIlanDetay = () => {
@@ -15,6 +15,7 @@ const EmlakIlanDetay = () => {
   const [shareMessage, setShareMessage] = useState('');
   const [reportMessage, setReportMessage] = useState('');
   const [mediaMessage, setMediaMessage] = useState('');
+  const [showLightbox, setShowLightbox] = useState(false);
 
   const listingData = {
     id: "1271652223",
@@ -79,6 +80,37 @@ const EmlakIlanDetay = () => {
 
   const params = new URLSearchParams(location.search);
   const listingIdFromQuery = params.get('id');
+
+  // Helpers for responsive HD images (Unsplash-style URLs)
+  const deriveRatio = (url) => {
+    const w = url.match(/(?:[?&])w=(\d+)/);
+    const h = url.match(/(?:[?&])h=(\d+)/);
+    if (w && h) {
+      const wi = parseInt(w[1], 10) || 400;
+      const hi = parseInt(h[1], 10) || 300;
+      return hi / wi;
+    }
+    return 3 / 4; // fallback 4:3
+  };
+
+  const resize = (url, width) => {
+    const ratio = deriveRatio(url);
+    const height = Math.round(width * ratio);
+    if (url.includes('w=')) {
+      return url
+        .replace(/w=\d+/, `w=${width}`)
+        .replace(/h=\d+/, `h=${height}`);
+    }
+    const hasQuery = url.includes('?');
+    return `${url}${hasQuery ? '&' : '?'}w=${width}&h=${height}&fit=crop`;
+  };
+
+  const buildSrcSet = (url) => {
+    const widths = [480, 800, 1200, 1600, 1920];
+    return widths.map(w => `${resize(url, w)} ${w}w`).join(', ');
+  };
+
+  const activeImage = useMemo(() => listingData.images[currentImageIndex], [currentImageIndex]);
 
   const handleImageNavigation = (direction) => {
     if (direction === 'next') {
@@ -376,9 +408,14 @@ const EmlakIlanDetay = () => {
       <div className="relative bg-gray-900">
         <div className="aspect-video bg-gray-200 flex items-center justify-center relative overflow-hidden">
           <img 
-            src={listingData.images[currentImageIndex]} 
+            src={resize(activeImage, 1200)}
+            srcSet={buildSrcSet(activeImage)}
+            sizes="(max-width: 640px) 100vw, 640px"
             alt="Property" 
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover cursor-zoom-in"
+            onClick={() => setShowLightbox(true)}
+            loading="lazy"
+            decoding="async"
           />
           
           <button 
@@ -463,6 +500,22 @@ const EmlakIlanDetay = () => {
           </button>
         </div>
       </div>
+
+      {/* Lightbox */}
+      {showLightbox && (
+        <div className="fixed inset-0 bg-black bg-opacity-95 z-50 flex items-center justify-center">
+          <button className="absolute top-4 right-4 text-white text-2xl" onClick={() => setShowLightbox(false)}>×</button>
+          <button className="absolute left-4 text-white text-3xl" onClick={() => handleImageNavigation('prev')}>‹</button>
+          <img
+            src={resize(activeImage, 1920)}
+            srcSet={buildSrcSet(activeImage)}
+            sizes="100vw"
+            alt="HD"
+            className="max-w-[95vw] max-h-[85vh] object-contain"
+          />
+          <button className="absolute right-4 text-white text-3xl" onClick={() => handleImageNavigation('next')}>›</button>
+        </div>
+      )}
 
       {/* Property Path & Price */}
       <div className="bg-white border-b border-amber-200 p-4">

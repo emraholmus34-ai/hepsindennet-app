@@ -1,6 +1,9 @@
 import { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const EmlakIlanDetay = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('bilgiler');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -74,6 +77,9 @@ const EmlakIlanDetay = () => {
     return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   };
 
+  const params = new URLSearchParams(location.search);
+  const listingIdFromQuery = params.get('id');
+
   const handleImageNavigation = (direction) => {
     if (direction === 'next') {
       setCurrentImageIndex((prev) => 
@@ -123,7 +129,7 @@ const EmlakIlanDetay = () => {
       {/* Header */}
       <div className="bg-gradient-to-r from-yellow-500 to-amber-600 text-white px-4 py-1 flex items-center justify-between shadow-lg">
         <div className="flex items-center">
-          <button className="mr-3 hover:bg-amber-600 rounded-full p-1 transition-colors">
+          <button className="mr-3 hover:bg-amber-600 rounded-full p-1 transition-colors" onClick={() => navigate(-1)}>
             <span className="text-lg">←</span>
           </button>
           <div className="text-lg font-bold">İlan Detayı</div>
@@ -534,7 +540,7 @@ const EmlakIlanDetay = () => {
 
               <div className="flex justify-between py-2 border-b border-gray-200">
                 <span className="text-sm text-gray-600">İlan No</span>
-                <span className="text-sm font-medium text-amber-600">{listingData.id}</span>
+                <span className="text-sm font-medium text-amber-600">{listingIdFromQuery || listingData.id}</span>
               </div>
 
               <div className="flex justify-between py-2 border-b border-gray-200">

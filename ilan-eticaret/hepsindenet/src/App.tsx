@@ -22,6 +22,7 @@ export default function App() {
           <Route path="/form/konut" element={<EmlakIlanFormuKonut />} />
           <Route path="/form/isyeri" element={<EmlakIlanFormuIsyeri />} />
           <Route path="/form/arsa" element={<EmlakIlanFormuArsa />} />
+          <Route path="*" element={<div className="p-6 text-center text-gray-600">Sayfa bulunamadı (404)</div>} />
         </Routes>
       </div>
     </div>

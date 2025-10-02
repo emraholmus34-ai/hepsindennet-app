@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const HepsindenNet = () => {
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState('homePage');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState({ name: '', email: '' });
@@ -118,18 +120,31 @@ const HepsindenNet = () => {
 
   const selectPropertyType = (type) => {
     setCurrentPropertyType(type);
-    setCurrentPage('adTypeSelectionPage');
+    if (type === 'commercial') {
+      setCurrentPage('commercialSubPage');
+    } else if (type === 'residential') {
+      setCurrentPage('residentialSubPage');
+    } else {
+      setCurrentPage('adTypeSelectionPage');
+    }
   };
 
   const selectAdType = (type) => {
     setCurrentAdType(type);
     if (currentPropertyType === 'commercial') {
-      setCurrentPage('commercialSubPage');
+      navigate(`/form/isyeri?mode=${type}${selectedPropertySubType ? `&sub=${encodeURIComponent(selectedPropertySubType)}` : ''}`);
     } else if (currentPropertyType === 'residential') {
-      setCurrentPage('residentialSubPage');
+      navigate(`/form/konut?mode=${type}${selectedPropertySubType ? `&sub=${encodeURIComponent(selectedPropertySubType)}` : ''}`);
+    } else if (currentPropertyType === 'land') {
+      navigate(`/form/arsa?mode=${type}`);
     } else {
-      setCurrentPage('adListPage');
+      navigate('/');
     }
+  };
+
+  const selectSubType = (subType) => {
+    setSelectedPropertySubType(subType);
+    setCurrentPage('adTypeSelectionPage');
   };
 
   const proceedToAdForm = (type) => {
@@ -659,7 +674,15 @@ const HepsindenNet = () => {
         {!isSpecialPage && currentPage === 'adTypeSelectionPage' && (
           <div>
             <div className="flex items-center mb-5">
-              <button onClick={() => setCurrentPage('realEstateAdPage')} className="bg-none border-none text-lg cursor-pointer mr-2 text-gray-600">←</button>
+              <button onClick={() => {
+                if (currentPropertyType === 'residential') {
+                  setCurrentPage('residentialSubPage');
+                } else if (currentPropertyType === 'commercial') {
+                  setCurrentPage('commercialSubPage');
+                } else {
+                  setCurrentPage('realEstateAdPage');
+                }
+              }} className="bg-none border-none text-lg cursor-pointer mr-2 text-gray-600">←</button>
               <h2 className="m-0 text-base text-gray-800 font-semibold">İşlem Türü Seçin</h2>
             </div>
             <div className="flex flex-col gap-3">
@@ -714,7 +737,7 @@ const HepsindenNet = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-2">
-              {residentialTypes.map((type) => renderCard(type, () => proceedToAdForm(type.name.toLowerCase().replace(/[^a-z0-9]/g, '_'))))}
+              {residentialTypes.map((type) => renderCard(type, () => selectSubType(type.name.toLowerCase().replace(/[^a-z0-9]/g, '_'))))}
             </div>
           </div>
         )}
@@ -727,7 +750,7 @@ const HepsindenNet = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-2">
-              {businessTypes.map((type) => renderCard(type, () => proceedToAdForm(type.name.toLowerCase().replace(/[^a-z0-9]/g, '_'))))}
+              {businessTypes.map((type) => renderCard(type, () => selectSubType(type.name.toLowerCase().replace(/[^a-z0-9]/g, '_'))))}
             </div>
           </div>
         )}

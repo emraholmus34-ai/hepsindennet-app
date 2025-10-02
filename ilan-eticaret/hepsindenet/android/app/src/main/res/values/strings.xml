@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">hepsindenet</string>
+    <string name="title_activity_main">hepsindenet</string>
+    <string name="package_name">com.hepsindenet.app</string>
+    <string name="custom_url_scheme">com.hepsindenet.app</string>
+</resources>
